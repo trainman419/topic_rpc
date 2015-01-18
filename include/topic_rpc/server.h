@@ -23,17 +23,23 @@ namespace topic_rpc {
         ros::Subscriber request_sub_;
 
       public:
+        // TODO: service callback
         Server(ros::NodeHandle & nh, std::string service_name) :
           service_name_(service_name) {
 
           // TODO: specify queue size
-          response_pub_ = nh.advertise<Request>(service_name + "/response", 10);
+          response_pub_ = nh.advertise<Response>(service_name + "/response",
+              10);
           request_sub_ = nh.subscribe(service_name + "/request", 10,
               &topic_rpc::Server<RPC_TYPE>::callback, this);
+
+          // TODO: detect duplicate servers and fail to start
           ROS_INFO_STREAM("Created topic_rpc server for " << service_name_);
         }
 
+      private:
         void callback(const typename Request::ConstPtr & req) {
+          ROS_INFO_STREAM("Got service request " << *req);
         }
     };
 } // namespace topic_rpc
