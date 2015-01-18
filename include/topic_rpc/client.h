@@ -25,6 +25,8 @@ namespace topic_rpc {
       Client(ros::NodeHandle & nh, const std::string service_name) :
         service_name_(service_name) {
 
+        service_name_ = nh.resolveName(service_name_);
+
         // TODO: queue size
         request_pub_ = nh.advertise<Request>(service_name_ + "/request", 10);
 
