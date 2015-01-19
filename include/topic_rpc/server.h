@@ -47,8 +47,8 @@ namespace topic_rpc {
 
       private:
         void requestCallback(Request req) {
-          ROS_INFO_STREAM("Got request for service " << service_name_ << ": "
-              << req);
+          ROS_DEBUG_STREAM_NAMED("topic_rpc", "Got request for service " <<
+              service_name_ << ": " << req);
           Response resp;               // create response
           callback_(req, resp);        // call the callback
           resp.id = req.id;            // fill in response ID
@@ -63,7 +63,8 @@ namespace topic_rpc {
               &topic_rpc::Server<RPC_TYPE>::requestCallback, this);
 
           // TODO: detect duplicate servers and fail to start
-          ROS_INFO_STREAM("Created topic_rpc server for " << service_name_);
+          ROS_DEBUG_STREAM_NAMED("topic_rpc", "Created topic_rpc server for "
+              << service_name_);
         }
     };
 } // namespace topic_rpc
