@@ -20,7 +20,12 @@ int main(int argc, char ** argv) {
     topic_rpc::RpcTest::Request req;
     req.a = 1;
     req.b = 2;
-    client.call(req);
+    topic_rpc::RpcTest::Response::ConstPtr resp = client.call(req);
+    if(resp) {
+      ROS_INFO_STREAM("1 + 2 = " << resp->sum);
+    } else {
+      ROS_ERROR("RPC call failed");
+    }
     ros::spinOnce();
     ros::Duration(1.0).sleep();
   }
