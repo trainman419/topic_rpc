@@ -52,7 +52,7 @@ namespace topic_rpc {
 
       }
 
-      // TODO: wait for subscribers? (ie request servers)
+      // TODO: wait for subscribers? (ie servers)
 
       typename Response::ConstPtr call(const Request & req) {
         // automatically fill in ID
