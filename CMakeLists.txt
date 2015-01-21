@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
+include(cmake/topic_rpc.cmake)
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -17,7 +18,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## Uncomment this if the package has a setup.py. This macro ensures
 ## modules and global scripts declared therein get installed
 ## See http://ros.org/doc/api/catkin/html/user_guide/setup_dot_py.html
-catkin_python_setup()
+# catkin_python_setup()
 
 ################################################
 ## Declare ROS messages, services and actions ##
@@ -62,11 +63,17 @@ add_service_files(
 #   Action2.action
 # )
 
+add_topic_rpc_messages(RpcTest)
+
+message("ALL_GEN_OUTPUT_FILES_py for topic_rpc is ${ALL_GEN_OUTPUT_FILES_py}")
+
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs
 )
+
+message("ALL_GEN_OUTPUT_FILES_py for topic_rpc is ${ALL_GEN_OUTPUT_FILES_py}")
 
 ###################################
 ## catkin specific configuration ##
@@ -78,10 +85,10 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES topic_rpc
   CATKIN_DEPENDS roscpp
-#  DEPENDS system_lib
+  CFG_EXTRAS topic_rpc.cmake
 )
 
 ###########
