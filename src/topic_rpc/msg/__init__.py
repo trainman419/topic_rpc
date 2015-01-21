@@ -10,7 +10,4 @@
 #
 # Author: Austin Hendrix
 
-from topic_rpc.srv import RpcTest
-
-RpcTestRequest = RpcTest.Request
-RpcTestResponse = RpcTest.Response
+from topic_rpc.srv import RpcTestRequest, RpcTestResponse
