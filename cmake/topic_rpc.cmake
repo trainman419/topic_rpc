@@ -14,7 +14,7 @@ function(add_topic_rpc_messages)
     message("Generating topic_rpc shim for ${srv} in ${GEN_OUTPUT_FILE}")
 
     add_custom_command(OUTPUT ${GEN_OUTPUT_FILE}
-      COMMAND echo "from ${PROJECT_NAME}.src import ${srv}Request,${srv}Response" > ${GEN_OUTPUT_FILE}
+      COMMAND echo "from ${PROJECT_NAME}.srv import ${srv}Request,${srv}Response" > ${GEN_OUTPUT_FILE}
       COMMENT "Generating topic_rpc message for ${srv}")
 
     list(APPEND ALL_GEN_OUTPUT_FILES_py ${GEN_OUTPUT_FILE})
