@@ -42,7 +42,5 @@ int main(int argc, char ** argv) {
   topic_rpc::Server<topic_rpc::RpcTest> server2(nh, "rpc_test2",
       &TestServ::callback, &test_serv);
 
-  while(ros::ok()) {
-    ros::spinOnce();
-  }
+  ros::spin();
 }
