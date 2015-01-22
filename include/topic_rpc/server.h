@@ -19,6 +19,9 @@ namespace topic_rpc {
         typedef typename RPC_TYPE::Response Response;
 
         std::string service_name_;
+        std::string response_topic_;
+        std::string request_topic_;
+
         ros::Publisher  response_pub_;
         ros::Subscriber request_sub_;
 
@@ -55,14 +58,51 @@ namespace topic_rpc {
           response_pub_.publish(resp); // publish response
         }
 
+        // check
+        bool checkForOtherServers() {
+          std::string node_name = ros::this_node::getName();
+          XmlRpc::XmlRpcValue request(node_name);
+          XmlRpc::XmlRpcValue response;
+          XmlRpc::XmlRpcValue payload;
+          bool success = ros::master::execute("getSystemState", request,
+              response, payload, false);
+
+          ROS_ASSERT(payload.getType() == XmlRpc::XmlRpcValue::TypeArray);
+          ROS_ASSERT(payload.size() == 3);
+
+          XmlRpc::XmlRpcValue & publishers = payload[0];
+          ROS_ASSERT(publishers.getType() == XmlRpc::XmlRpcValue::TypeArray);
+          for(int i=0; i<publishers.size(); i++) {
+            XmlRpc::XmlRpcValue & topic = publishers[i];
+            ROS_ASSERT(topic.getType() == XmlRpc::XmlRpcValue::TypeArray);
+            ROS_ASSERT(topic[0].getType() == XmlRpc::XmlRpcValue::TypeString);
+            std::string topic_name = topic[0];
+            //ROS_INFO_STREAM("Published topic: " << topic_name);
+          }
+
+          XmlRpc::XmlRpcValue & subscribers = payload[1];
+          ROS_ASSERT(subscribers.getType() == XmlRpc::XmlRpcValue::TypeArray);
+          for(int i=0; i<subscribers.size(); i++) {
+            XmlRpc::XmlRpcValue & topic = subscribers[i];
+            ROS_ASSERT(topic.getType() == XmlRpc::XmlRpcValue::TypeArray);
+            ROS_ASSERT(topic[0].getType() == XmlRpc::XmlRpcValue::TypeString);
+            std::string topic_name = topic[0];
+            //ROS_INFO_STREAM("Subscribed topic: " << topic_name);
+          }
+        }
+
         void setup(ros::NodeHandle &nh) {
           service_name_ = nh.resolveName(service_name_);
-          response_pub_ = nh.advertise<Response>(service_name_ + "/response",
-              10);
-          request_sub_ = nh.subscribe(service_name_ + "/request", 10,
-              &topic_rpc::Server<RPC_TYPE>::requestCallback, this);
+          response_topic_ = service_name_ + "/response";
+          request_topic_ = service_name_ + "/request";
+
+          checkForOtherServers();
 
           // TODO: detect duplicate servers and fail to start
+          response_pub_ = nh.advertise<Response>(response_topic_, 10);
+          request_sub_ = nh.subscribe(request_topic_, 10,
+              &topic_rpc::Server<RPC_TYPE>::requestCallback, this);
+
           ROS_DEBUG_STREAM_NAMED("topic_rpc", "Created topic_rpc server for "
               << service_name_);
         }
