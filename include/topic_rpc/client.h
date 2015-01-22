@@ -52,7 +52,24 @@ namespace topic_rpc {
 
       }
 
-      // TODO: wait for subscribers? (ie servers)
+      bool waitForServer(const ros::Duration & d = ros::Duration(0)) {
+        bool timeout = (d != ros::Duration(0));
+        ros::Time end = ros::Time::now() + d;
+
+        while(request_pub_.getNumSubscribers() < 1 ||
+              response_sub_.getNumPublishers() < 1) {
+          ros::Duration(0.1).sleep();
+
+          // return false on shutdown
+          if(!ros::ok())
+            return false;
+
+          // return false on timeout
+          if(timeout && ros::Time::now() >= end)
+            return false;
+        }
+        return true;
+      }
 
       typename Response::ConstPtr call(const Request & req) {
         // automatically fill in ID
@@ -69,13 +86,12 @@ namespace topic_rpc {
         requests_.push_back(request.id);
         queue_mutex_.unlock();
 
-        while(request_pub_.getNumSubscribers() < 1 ||
-              response_sub_.getNumPublishers() < 1) {
-          ROS_WARN_STREAM_THROTTLE_NAMED(2.0, "topic_rpc", "Waiting for "
-              "topic_rpc server on " << service_name_);
-          ros::Duration(0.1).sleep();
-          if(!ros::ok())
-            return typename Response::ConstPtr();
+        if(!waitForServer(ros::Duration(0.01))) {
+          ROS_WARN_STREAM_NAMED("topic_rpc", "Waiting for topic_rpc server on "
+              << service_name_);
+        }
+        if(!waitForServer()) {
+          return typename Response::ConstPtr();
         }
 
         ROS_DEBUG_STREAM_NAMED("topic_rpc", "Sending RPC request: " << request);

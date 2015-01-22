@@ -16,6 +16,10 @@ int main(int argc, char ** argv) {
 
   topic_rpc::Client<topic_rpc::RpcTest> client(nh, "rpc_test");
 
+  ROS_INFO("Waiting for RPC server");
+  client.waitForServer();
+  ROS_INFO("RPC server ready");
+
   while(ros::ok()) {
     topic_rpc::RpcTest::Request req;
     req.a = 1;
