@@ -22,6 +22,7 @@ namespace topic_rpc {
         std::string response_topic_;
         std::string request_topic_;
 
+        bool started_;
         ros::Publisher  response_pub_;
         ros::Subscriber request_sub_;
 
@@ -33,7 +34,8 @@ namespace topic_rpc {
         Server(ros::NodeHandle & nh, std::string service_name,
             CallbackType cb) :
           service_name_(service_name),
-          callback_(cb) {
+          callback_(cb),
+          started_(false) {
             setup(nh);
         }
 
@@ -41,12 +43,17 @@ namespace topic_rpc {
         Server(ros::NodeHandle & nh, std::string service_name,
             bool(T::*cb)(Request &, Response &), T * obj) :
           service_name_(service_name),
-          callback_(boost::bind(cb, obj, _1, _2)) {
+          callback_(boost::bind(cb, obj, _1, _2)),
+          started_(false) {
             setup(nh);
         }
 
         // TODO(1.0): version that takes a shared_ptr to a class
         // Note: no version that takes a callback on ServiceEvent
+
+        operator bool() { return started_; }
+
+        bool isOk() { return started_; }
 
       private:
         void requestCallback(Request req) {
@@ -58,7 +65,8 @@ namespace topic_rpc {
           response_pub_.publish(resp); // publish response
         }
 
-        // check
+        // check if another server is already running for this service
+        // returns true if another service exists, false otherwise
         bool checkForOtherServers() {
           std::string node_name = ros::this_node::getName();
           XmlRpc::XmlRpcValue request(node_name);
@@ -70,6 +78,10 @@ namespace topic_rpc {
           ROS_ASSERT(payload.getType() == XmlRpc::XmlRpcValue::TypeArray);
           ROS_ASSERT(payload.size() == 3);
 
+          bool request_sub  = false;
+          bool response_pub = false;
+
+
           XmlRpc::XmlRpcValue & publishers = payload[0];
           ROS_ASSERT(publishers.getType() == XmlRpc::XmlRpcValue::TypeArray);
           for(int i=0; i<publishers.size(); i++) {
@@ -77,7 +89,10 @@ namespace topic_rpc {
             ROS_ASSERT(topic.getType() == XmlRpc::XmlRpcValue::TypeArray);
             ROS_ASSERT(topic[0].getType() == XmlRpc::XmlRpcValue::TypeString);
             std::string topic_name = topic[0];
-            //ROS_INFO_STREAM("Published topic: " << topic_name);
+            if(topic_name == response_topic_) {
+              response_pub = true;
+              ROS_INFO("Response topic is published");
+            }
           }
 
           XmlRpc::XmlRpcValue & subscribers = payload[1];
@@ -87,8 +102,13 @@ namespace topic_rpc {
             ROS_ASSERT(topic.getType() == XmlRpc::XmlRpcValue::TypeArray);
             ROS_ASSERT(topic[0].getType() == XmlRpc::XmlRpcValue::TypeString);
             std::string topic_name = topic[0];
-            //ROS_INFO_STREAM("Subscribed topic: " << topic_name);
+            if(topic_name == request_topic_) {
+              request_sub = true;
+              ROS_INFO("Request topic is subscribed to");
+            }
           }
+
+          return response_pub && request_sub;
         }
 
         void setup(ros::NodeHandle &nh) {
@@ -96,15 +116,21 @@ namespace topic_rpc {
           response_topic_ = service_name_ + "/response";
           request_topic_ = service_name_ + "/request";
 
-          checkForOtherServers();
+          // check for duplicate servers and fail to start
+          if(checkForOtherServers()) {
+            ROS_FATAL_STREAM_NAMED("topic_rpc", "Another topic_rpc server is "
+                "already running for " << service_name_ << ", this server will"
+                " not be started");
+            return;
+          }
 
-          // TODO: detect duplicate servers and fail to start
           response_pub_ = nh.advertise<Response>(response_topic_, 10);
           request_sub_ = nh.subscribe(request_topic_, 10,
               &topic_rpc::Server<RPC_TYPE>::requestCallback, this);
 
           ROS_DEBUG_STREAM_NAMED("topic_rpc", "Created topic_rpc server for "
               << service_name_);
+          started_ = true;
         }
     };
 } // namespace topic_rpc
