@@ -86,7 +86,7 @@ message("ALL_GEN_OUTPUT_FILES_py for topic_rpc is ${ALL_GEN_OUTPUT_FILES_py}")
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES topic_rpc
+  LIBRARIES uuid
   CATKIN_DEPENDS roscpp
   CFG_EXTRAS topic_rpc.cmake
 )
@@ -114,8 +114,8 @@ add_dependencies(client topic_rpc_generate_messages_cpp)
 add_dependencies(server topic_rpc_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(client ${catkin_LIBRARIES})
-target_link_libraries(server ${catkin_LIBRARIES})
+target_link_libraries(client ${catkin_LIBRARIES} uuid)
+target_link_libraries(server ${catkin_LIBRARIES} uuid)
 
 #############
 ## Install ##
