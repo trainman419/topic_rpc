@@ -91,7 +91,8 @@ namespace topic_rpc {
             std::string topic_name = topic[0];
             if(topic_name == response_topic_) {
               response_pub = true;
-              ROS_INFO("Response topic is published");
+              ROS_DEBUG_NAMED("topic_rpc", "Another node is already publishing"
+                  " the response topic");
             }
           }
 
@@ -104,7 +105,8 @@ namespace topic_rpc {
             std::string topic_name = topic[0];
             if(topic_name == request_topic_) {
               request_sub = true;
-              ROS_INFO("Request topic is subscribed to");
+              ROS_DEBUG_NAMED("topic_rpc", "Another node is already "
+                  "subscribing to the request topic");
             }
           }
 
