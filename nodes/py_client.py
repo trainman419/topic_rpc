@@ -15,5 +15,15 @@ def main():
     client.waitForServer()
     rospy.loginfo("RPC server ready")
 
+    rate = rospy.Rate(1)
+
+    while not rospy.is_shutdown():
+        try:
+            resp = client(1, 2)
+            rospy.loginfo("1 + 2 = %d" % resp.sum)
+        except rospy.ServiceException, e:
+            rospy.logerr("Service call failed: %s"%e)
+        rate.sleep()
+
 if __name__ == '__main__':
     main()
